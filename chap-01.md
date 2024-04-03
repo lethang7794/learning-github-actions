@@ -92,6 +92,11 @@ Github provides ready-to-use workflows, organized by categories:
 - **Deployment (CD)**: creating deployable objects (e.g. containers), then deploying them to cloud platforms.
   - **Pages**: package/deploy static content to Github Pages
 
+These starter workflows are showed when you create a workflow with GitHub interface.
+
+> [!TIP]
+> The workflow files are available at [github.com/actions/starter-workflows][actions-starter-workflows]
+
 ### Actions Marketplace
 
 Instead of writing your own action, you can uses existing actions, available via Github Marketplaces's Actions, to save time & effort.
@@ -204,6 +209,7 @@ artifacts and connect your workflows to it.
 
 [^github-marketplace-actions]: <https://github.com/marketplace?type=actions>
 [^starer-workflows]: <https://docs.github.com/en/actions/learn-github-actions/using-starter-workflows>
-[^start-workflows-code]: <https://github.com/actions/starter-workflows>
 [^minute-multiplier]: <https://docs.github.com/en/billing/managing-billing-for-github-actions/about-billing-for-github-actions#minute-multipliers>
 [^artifact-retention-period]: <https://docs.github.com/en/actions/using-workflows/storing-workflow-data-as-artifacts>
+
+[actions-starter-workflows]: https://github.com/actions/starter-workflows
