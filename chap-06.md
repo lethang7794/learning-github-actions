@@ -292,11 +292,59 @@ You can use `permissions`
 > ```
 
 > [!NOTE]
-> If you need more permissions than the `GITHUB_TOKEN` can provide, you can create your personal access token, and store it as a secret in the repository.
+> If you need more permissions than the `GITHUB_TOKEN` can provide, you can create your _personal access token_, and store it as a secret in the repository.
 
 ## Deployment Environments
 
+Environment
+: Object used to identify a general target for deployment
+: e.g. `production`, `test`, `dev`
+
+A job (in a workflow) can reference one (& only one) environment.
+
+Each environment can
+
+- have their own data (secrets & variables)
+  - restricted to that environment
+  - (along with repository/organization secrets/variables)
+- have _deployment protected rule_[^protecting-deployments] that to control rule that must pass before deployments to that environment can proceed
+
+  The supported rules are:
+
+  - Required reviewers
+  - Wait timer
+  - Deployment branches/tags
+
+> [!TIP]
+> You can also create your own custom deployment rules (still in beta) to approve/reject based on 3rd-party services, e.g. security scanning
+
+> [!TIP]
+> If one of your workflow jobs references an environment, the job won’t start until all of the environment’s protection rules have passed.
+
+> [!TIP]
+> Deployment protected rules are available for:
+>
+> - Public repositories.
+> - Private repositories of GitHub Pro and organizations using GitHub Team.
+
 ## Conclusion
+
+- GitHub Actions provides several ways to get & set properties of the environment for use in your workflows:
+
+  - Contexts: Data about workflow runs, jobs, steps...
+  - Environment variables: Values at workflow/job/step level.
+  - Configuration variables: Values at repository/organization level - shared between workflows.
+  - Secrets: Sensitive values at repository/organization level - shared between workflows.
+  - Deployment environment: Separate values for each deployment target, e.g. `production`, `test`, `dev`
+
+- Workflows authenticate with GitHub Actions by using _installation person token_ stored at `GITHUB_TOKEN` secret (also available via context `github.token`).
+
+- If the default permissions associated with `GITHUB_TOKEN` is not fit your demand, you can:
+
+  - Modify its permissions.
+  - Create your own person token & assign the appreciate permissions.
+
+- Deployment environment can have _protection rules_ to control what condition to run your jobs.
 
 [^default-environment-variables]: <https://docs.github.com/en/actions/learn-github-actions/variables#default-environment-variables>
 [^automatic-token-authentication]: <https://docs.github.com/en/actions/security-guides/automatic-token-authentication>
@@ -304,5 +352,6 @@ You can use `permissions`
 [^available-scopes]: <https://docs.github.com/en/actions/using-jobs/assigning-permissions-to-jobs>
 [^secrets-context]: <https://docs.github.com/en/actions/learn-github-actions/contexts#secrets-context>
 [^github-context]: <https://docs.github.com/en/actions/learn-github-actions/contexts#github-context>
+[^protecting-deployments]: <https://docs.github.com/en/actions/deployment/protecting-deployments>
 
 [defaul-permissions]: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
