@@ -80,7 +80,7 @@ Code owners are automatically requested for review when someone opens a pull req
 For more information, see [About code owners | GitHub Docs][about-code-owners]
 
 > [!TIP]
-> Specify an entry for `.github/worflows` directory in `CODEOWNERS` file so any proposed changes to workflow files can be reviewed from a designated reviewer.
+> Specify an entry for `.github/workflows` directory in `CODEOWNERS` file so any proposed changes to workflow files can be reviewed from a designated reviewer.
 
 ### Rules for Collaboration
 
@@ -143,7 +143,7 @@ A ruleset can be used as a replacement to `branches protection rule` or `protect
   - Who it apply to: with `Bypass list`
   - Which target it apply to: with `Targets`
 
-- Multile rulesets can apply at the same time through `rule layering`[^rule-layering]
+- Multiple rulesets can apply at the same time through `rule layering`[^rule-layering]
 
 - Users with read access can view the active rulesets, so they know which rule they are violating.
 
