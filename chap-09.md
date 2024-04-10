@@ -570,11 +570,106 @@ Attackers can introduce malicious code to
 
 These code can expose the job's `GITHUB_TOKEN`, with have access to the repository's secrets.
 
-### Adding a Pull Request Validation Script
-
 ### Safely Handling Pull Requests
 
+If a workflow does NOT need access to the target's repository `secrets` `write` permissions, use `pull_request` event (instead of `pull_request_target`).
+
+If a workflow does need access to the target's repository `secrets`/`write` permissions:
+
+1. Split the workflow into multiple workflows.
+
+   - Workflow 1 (triggered by `pull_request` event):
+
+     - Handle untrusted code (without permissions for `secrets`/`write`)
+     - (Upload workflow results as artifacts)
+
+     e.g.
+
+     ```yml
+     name: Workflow 1 Handle untrusted code
+
+     # R/O repo access: Cannot access secrets
+     on:
+       pull_request:
+
+     jobs:
+       process:
+         runs-on: ubuntu-latest
+         steps:
+           - uses: actions/checkout@v3
+
+           - name: do processing of pull request securely
+
+           - name: persist results from processing
+             uses: actions/upload-artifact@v3
+             with:
+               - <results of processing>
+               - <...>
+     ```
+
+   - Workflow 2 (triggered by [`workflow_run` event][workflow_run]):
+
+     - (Download artifacts from workflow 1)
+     - Do processing that needs permission for `secrets`/`write`:
+
+       - Comment to repository
+       - Update the actual pull request
+
+       e.g.
+
+       ```yml
+       name: Workflow 2 Do processing that needs r/w access and/or secrets
+
+       # R/W repo access - Access to secrets
+       on:
+         workflow_run:
+           workflows: ["Workflow 1 Handle untrusted code"]
+           types:
+             - completed
+
+       jobs:
+         process:
+           runs-on: ubuntu-latest
+           if: >
+             github.event.workflow_run.event == 'pull_request' &&
+             github.event.workflow_run.conclusion == 'success'
+           steps:
+             - name: get results from processing securely
+               uses: actions/download-artifact@v3
+               with:
+                 - <results of processing>
+                 - <...>
+             - name: do processing with results
+       ```
+
+2. Manually review incoming pull request, then assign a label (e.g. `allow`) to mark that pull request as safe to process in the target environment.
+
+   e.g.
+
+   - Process the pull request with an `allow` label (with permissions for `secrets`/`write`)
+
+     ```yml
+     on:
+       pull_request_target:
+         types: [labeled]
+
+     jobs:
+       process:
+         runs-on: ubuntu-latest
+         if: contains(github.event.pull_request.labels.*.name, 'allow')
+         steps:
+           - name: process the pull request
+     ```
+
 ## Conclusion
+
+GitHub Actions provides a convenient way of achieving automatic processing that is highly integrated into your repository and execution environments, but with the high risk of allowing security vulnerabilities.
+
+As a user of GitHub Actions, you have the responsibility to secure your workflows, by:
+
+- Configure your repositories, workflows (security before workflows run).
+- Apply good design with secrets, tokens in your workflows (security while workflows run).
+- Monitor your repository (security after workflows run).
 
 [about-code-owners]: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
 [2 pipelines that creating a release]: https://docs.gitlab.com/ee/user/project/releases/release_cicd_examples.html#skip-multiple-pipelines-when-creating-a-release
@@ -583,6 +678,7 @@ These code can expose the job's `GITHUB_TOKEN`, with have access to the reposito
 [Git-Internals-Git-References]: https://git-scm.com/book/en/v2/Git-Internals-Git-References
 [Git-Internals-Git-Objects]: https://git-scm.com/book/en/v2/Git-Internals-Git-Objects
 [CodeQL]: https://codeql.github.com/
+[workflow_run]: https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#workflow_run
 
 [^github-actions]: <http://github.com/actions>
 [^verified-creators]: <https://docs.github.com/en/actions/learn-github-actions/finding-and-customizing-actions#browsing-marketplace-actions-in-the-workflow-editor>
