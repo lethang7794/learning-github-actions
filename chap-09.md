@@ -478,13 +478,97 @@ To secure your dependencies:
 
 ## Security by Monitoring (After workflows run)
 
-### Scanning
+GitHub is, by design, a collaborative environment:
+
+- Code in your repository can be modified by others in:
+
+  - _Intentional_ ways, e.g. as pull request
+  - _Unintentional_ ways, e.g. someone modify the tagged version of an action you use
+
+- It's easy for changes to be introduced frequently & quickly.
+
+This approach is great for collaboration, but it resents additional risks for securing your workflows & actions.
+
+- These changes can
+  - throughout the lifecycle of your repository.
+  - long after you have done all the necessary configuration & design to make your workflows secure.
+
+To defense against these issues, you need to actively
+
+- scanning (what has changed)
+- reviewing, validating (incoming changes)
+
+with secure pull request processes, considered as _monitoring_.
+
+### Code Scanning
+
+GitHub Actions makes it easy to setup code scanning (for your repository) with only some clicks via its web interface.
+
+e.g. To create a workflow that use [CodeQL] to for code scanning:
+
+- `Actions` tab
+
+  - `New workflow` / `CodeQL Analysis`[^codeql-workflow].
+  - Click `Configure`.
+  - GitHub Actions (detect the languages in your repository and) show you a generated workflow file.
+  - (Optional) Change the languages, scanning interval
+  - `Commit changes`
+
+- Or `Security` tab
+
+  - `Vulnerability alerts` / `Code scanning` / `Configure scanning tool`
+  - `Tools` / `CodeQL analysis` / `Setup` / `Default` (or `Advanced`, which is equivalent to doing via `Actions` tab)
 
 ### Processing Pull Requests Securely
 
-### Vulnerabilities with Workflows in Pull Requests
+Typically, a CI pipeline would have a `pre-merge` check to identify broke/bad code & prevent it from being merged.
 
-### Vulnerabilities with Source Code in Pull Requests
+This type of flow can be a large attack surface.
+
+- It often runs some sort of build & test process against the code the pull request.
+- This leaves open a number of attack vectors:
+  - Modifying build scripts.
+  - Modifying test cases/suites.
+  - Leveraging pre/post processing of the tooling used.
+
+To mitigates these risks, GitHub has 2 types of event for pull requests:
+
+- `pull_request` event:
+  - doesn't have ~~write~~ permissions, access to repository's ~~secrets~~
+  - run in the context of the _merge commit_
+- `pull_request_target` event:
+  - has write permissions and access to repository's secrets.
+  - run in the context of the _target repository_ of the pull request
+
+> [!TIP]
+> The `pull_request_target` event allows workflows to more perform more operations to pull requests (from a fork):
+>
+> - Add comments on a pull requests
+> - Label pull requests into categories, flagged for further review.
+
+> [!NOTE]
+> A workflow triggered by `pull_request_target` event doesn’t execute any‐
+> thing from the workflows in the pull request itself.
+>
+> It just executes the workflow code in the base repository.
+
+> [!WARNING]
+> A workflow triggered by `pull_request_target` event can still cause troubles.
+>
+> e.g. It `checkout` the code from the pull request’s repository’s `HEAD`, where attackers:
+>
+> - rewrite commonly used scripts, e.g. build script
+> - change dependencies list
+> - introduce `local actions`
+
+### Vulnerabilities in Pull Requests
+
+Attackers can introduce malicious code to
+
+- your workflow files
+- your source code
+
+These code can expose the job's `GITHUB_TOKEN`, with have access to the repository's secrets.
 
 ### Adding a Pull Request Validation Script
 
@@ -498,6 +582,7 @@ To secure your dependencies:
 [github-apps]: https://docs.github.com/en/apps/overview
 [Git-Internals-Git-References]: https://git-scm.com/book/en/v2/Git-Internals-Git-References
 [Git-Internals-Git-Objects]: https://git-scm.com/book/en/v2/Git-Internals-Git-Objects
+[CodeQL]: https://codeql.github.com/
 
 [^github-actions]: <http://github.com/actions>
 [^verified-creators]: <https://docs.github.com/en/actions/learn-github-actions/finding-and-customizing-actions#browsing-marketplace-actions-in-the-workflow-editor>
@@ -512,3 +597,4 @@ To secure your dependencies:
 [^what-is-a-supply-chain-attack]: <https://www.cloudflare.com/learning/security/what-is-a-supply-chain-attack/>
 [^referencing-actions]: <https://securitylab.github.com/research/github-actions-building-blocks#referencing-actions>
 [^jobs-job_id-steps-uses]: <https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idstepsuses>
+[^codeql-workflow]: <https://github.com/actions/starter-workflows/blob/main/code-scanning/codeql.yml>
