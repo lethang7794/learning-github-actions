@@ -263,33 +263,33 @@ You can use `permissions`
 >
 > - `secrets` context[^secrets-context]
 >
-> e.g. `${{ secrets.GITHUB_TOKEN }}`
+>   e.g. `${{ secrets.GITHUB_TOKEN }}`
 >
 > - `github` context[^github-context] (only available within the execution steps of a job)
 >
-> e.g. `${{ github.token }}`
+>   e.g. `${{ github.token }}`
 
 > [!NOTE]
 > Use case of the `GITHUB_TOKEN` secret:
 >
 > - Passing to an action, e.g.
 >
-> ```yml
-> steps:
->   - uses: actions/labeler@v5
->     with:
->       repo-token: ${{ secrets.GITHUB_TOKEN }}
-> ```
+>    ```yml
+>    steps:
+>      - uses: actions/labeler@v5
+>        with:
+>          repo-token: ${{ secrets.GITHUB_TOKEN }}
+>    ```
 >
 > - Make GitHub REST API calls
 >
-> ```yml
-> steps:
->   - run: |
->       curl --request GET \
->       --url "https://api.github.com/octocat" \
->       --header "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}"
-> ```
+>    ```yml
+>    steps:
+>      - run: |
+>          curl --request GET \
+>          --url "https://api.github.com/octocat" \
+>          --header "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}"
+>    ```
 
 > [!NOTE]
 > If you need more permissions than the `GITHUB_TOKEN` can provide, you can create your _personal access token_, and store it as a secret in the repository.
