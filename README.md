@@ -25,7 +25,7 @@ Read the book at [Learning GitHub Actions | O'Reilly Library](https://www.oreill
 
 - Part IV. Advanced Topics
 
-  - Chapter 11. Creating Custom actions
-  - Chapter 12. Advanced Workflows
-  - Chapter 13. Advanced Workflow Techniques
-  - Chapter 14. Migrating to GitHub Actions
+  - [Chapter 11. Creating Custom actions](/chap-11.md)
+  - [Chapter 12. Advanced Workflows](/chap-12.md)
+  - [Chapter 13. Advanced Workflow Techniques](/chap-13.md)
+  - [Chapter 14. Migrating to GitHub Actions](/chap-14.md)
