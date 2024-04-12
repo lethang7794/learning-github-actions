@@ -185,6 +185,9 @@ e.g.
     - run: go run hello_world.go
   ```
 
+> [!TIP]
+> Each `run` keyword represents a new process and shell in the runner environment[^jobs-job_id-steps-run].
+
 > [!NOTE]
 > You can use an action defined in
 >
@@ -340,3 +343,5 @@ The execution of the workflow can be seen in `Actions` tab of the GitHub reposit
 [triggering-a-workflow]: https://docs.github.com/en/actions/using-workflows/triggering-a-workflow
 [events-that-trigger-workflows]: https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows
 [uses]: https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idstepsuses
+
+[^jobs-job_id-steps-run]: <https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idstepsrun>
