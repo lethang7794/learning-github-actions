@@ -126,11 +126,148 @@ GitHub Actions has a good [write up][troubleshooting-self-hosted-runners] for de
 
 ### Adding Your Own Messages in Logs
 
+You can add your own messages to the log of a job, by using _workflow commands_ (as a part of a step's `run` clause) to:
+
+- Set a _debug_ message
+- Set a _notice_ message
+- Set a _warning_ message
+- Set an _error_ message
+
+> [!IMPORTANT]
+> How to view your own messages?
+>
+> - For debug messages: `Step Debug Logging` needs to be enabled before the workflow run for the debug messages to show up (with other debug messages from GitHub Actions ) in the job log.
+> - For notice/warning/error messages: they will produce annotations in the workflow run summary.
+
+> [!NOTE]
+> Workflow command is how you tell the runner machine to do tasks, e.g.
+>
+> - Add debug messages to the output logs
+> - Set environment variables
+> - Output values used by other actions
+
+> [!NOTE]
+> To invoke a workflow command, in a step `run` clause you use the shell command `echo` :
+>
+> - In the format of `echo "::<workflow-command>::"`
+>
+>   e.g.
+>
+>   - Setting a debug message `::debug::{message}`
+>
+>     Invoke: `run: echo "::debug::This is a debug message"`
+>
+>   - Masking a value in a log: `::add-mask::{value}`
+>
+>     Invoke: `run: echo "::add-mask::THIS MESSAGE SHOULD BE MASKED"`
+>
+> - To write to a file.
+>
+>   e.g.
+>
+>   - Setting an environment for subsequent steps
+>
+>     `echo "{environment_variable_name}={value}" >> "$GITHUB_ENV"`
+
 ### Additional Log Customizations
 
-### Creating a Customized Job Summary
+#### Grouping lines in a log
+
+To create a group:
+
+- Use the `group` command and specify a `title`.
+- When you finish, use the `endgroup` command
+
+Anything you print to the log between the `group` and `endgroup` commands is nested inside an expandable entry in the log.
+
+Syntax:
+
+- ```yml
+  ::group::{title}
+  ```
+
+- ```yml
+  ::endgroup::
+  ```
+
+e.g.
+
+- ```yml
+  steps:
+    - name: Group lines in log
+      run: |
+        echo "::group::Extended info"
+        echo "Info line 1"
+        echo "Info line 2"
+        echo "Info line 3"
+        echo "::endgroup::"
+  ```
+
+#### Masking values in logs
+
+`add-mask` command masks the value of a string/variable
+
+Syntax: `::add-mask::{value}`
+
+e.g.
+
+```yml
+jobs:
+  log_formatting:
+    runs-on: ubuntu-latest
+    env:
+      USER_ID: "User 1234"
+    steps:
+      - run: echo "::add-mask::$USER_ID"
+      - run: echo "USER_ID is $USER_ID"
+```
+
+> [!NOTE]
+> The repository's secret are automatically masked by GitHub Actions.
+
+### Add a Job Summary
+
+job summary
+: the output displayed on the summary page of a job
+: a grouping of any summaries for the individual steps in the job
+
+To add a summary for a step to a job’s summary, you write the summary to "`GITHUB_STEP_SUMMARY` environment file".
+
+> [!NOTE]
+> During the execution of a workflow, the runner generates **temporary files** that can be used to perform certain actions.
+>
+> The **path** to these files are exposed via environment variables, e.g.
+>
+> - `GITHUB_STEP_SUMMARY`
+> - `GITHUB_ENV`
+> - `GITHUB_OUTPUT`
+
+When a job finishes, the summaries for all steps in a job are
+
+- grouped together into a single job summary
+- (shown on the workflow run summary page)
+
+> [!TIP]
+> The `GITHUB_STEP_SUMMARY` is unique for each step in a job.
 
 ## Conclusion
+
+- The execution information of your workflow runs can be access in a lot of ways:
+  - The status badges: Is a workflow `passing` or `failing`?
+  - `Actions` Tab: The list of workflow runs:
+    - The detail page of workflow run:
+      The run progress is visualized with a graph for all the jobs
+      - Each job log output
+- If a workflow doesn't work, let it runs again. Via the web interface, you can:
+  - Re-run a specific job
+  - Re-run failed jobs
+  - Re-run all jobs
+- But that workflow still doesn't work, let's fix it:
+  - But, wait, maybe re-run it once more time (and turn on debug logging) and it's fixed.
+  - It failed again:
+    - Check the `debugging log` that's you've just turned on.
+    - Add your own logs.
+- OK, everything works now, but you want to quickly know whether the workflow do as you want. You can add job summaries to add much more detail about the outcome of the job.
 
 [Enabling debug logging]: https://docs.github.com/en/actions/monitoring-and-troubleshooting-workflows/enabling-debug-logging
 [Re-running workflows and jobs]: https://docs.github.com/en/actions/managing-workflow-runs/re-running-workflows-and-jobs
