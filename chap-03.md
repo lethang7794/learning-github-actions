@@ -79,6 +79,8 @@ steps:
       uses: actions/checkout@v4-beta
       ```
 
+For more information about using an action, see [`jobs.<job_id>.steps[*].uses` | Workflow Syntax](https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idstepsuses)
+
 ## Public actions and the Marketplace
 
 The Actions Marketplace is where creators can publish their actions to share with others in a standard location. It's available at [Actions Marketplace](https://github.com/marketplace?type=actions).
