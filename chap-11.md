@@ -711,7 +711,7 @@ e.g.
     main: dist/index.js
   ```
 
-- `.github/my-workflow.yaml`
+- `.github/workflows/my-workflow.yaml`
 
   ```yml
   name: My Workflow
@@ -738,7 +738,18 @@ e.g.
             who-to-greet: ${{ inputs.who-to-greet }}
   ```
 
-> [!IMPORTANT]
+> [!NOTE]
+> The path, to the directory that contains the action in your workflow's repository, is relative (`./`) to the default working directory (`github.workspace`)
+
+> [!NOTE]
+> For `github.workspace`:
+>
+> - The default working directory on the runner for steps.
+> - When using the `checkout` action: the default location of your repository
+
+For more information, see [Example: Using an action in the same repository as the workflow] at [`jobs.<job_id>.steps[*].uses` | Workflow syntax][jobs-job_id-steps-uses]
+
+> [!NOTE]
 > Besides using a _local action_, you can also use a "local" workflow, which is also a _reusable workflow_.
 
 ## Conclusion
@@ -746,7 +757,7 @@ e.g.
 You can create you own custom action with:
 
 - composite action: consists of running steps (similar to a job)
-- JavaScript action: use a more powerful programming language (JavaScript) with the offical Actions Toolkit.
+- JavaScript action: use a more powerful programming language (JavaScript) with the official Actions Toolkit.
 - Docker container action: bundle the environment (or use any programming language)
 
 A custom action needs to have:
@@ -768,6 +779,8 @@ A custom action needs to have:
 [action-runs-steps-run]: https://docs.github.com/en/actions/creating-actions/metadata-syntax-for-github-actions#runsstepsrun
 [action-runs-steps-uses]: https://docs.github.com/en/actions/creating-actions/metadata-syntax-for-github-actions#runsstepsuses
 [Allowing access to components in a private repository]: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/enabling-features-for-your-repository/managing-github-actions-settings-for-a-repository#allowing-access-to-components-in-a-private-repository
+[Example: Using an action in the same repository as the workflow]: https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#example-using-an-action-in-the-same-repository-as-the-workflow
+[jobs-job_id-steps-uses]: https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idstepsuses
 
 [^sharing-actions-and-workflows-with-your-organization]: <https://docs.github.com/en/actions/creating-actions/sharing-actions-and-workflows-with-your-organization>
 [^creating-a-javascript-action]: <https://docs.github.com/en/actions/creating-actions/creating-a-javascript-action>
