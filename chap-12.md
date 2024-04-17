@@ -445,6 +445,14 @@ e.g. a workflow execution must be passed for a pull request to be processed
 
 ## Conclusion
 
+- To help everyone (in your organization) get started with Actions, you can create your own **starter workflows**.
+
+  Starter workflows also ensure workflows created are consistent & well structure.
+
+- To reuse workflows, you can create **reusable workflows**, which can be used by workflows in your repositories or other repositories in your organization.
+
+- To require workflows to pass before merging pull request, you can use repository **ruleset** to specify **required workflows**.
+
 [organization]: https://docs.github.com/en/organizations/collaborating-with-groups-in-organizations/about-organizations
 [GitHub Enterprise Cloud]: https://docs.github.com/en/get-started/onboarding/getting-started-with-github-enterprise-cloud
 [community health file]: https://docs.github.com/en/communities/setting-up-your-project-for-healthy-contributions/creating-a-default-community-health-file
