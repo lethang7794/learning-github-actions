@@ -233,31 +233,230 @@ e.g.
 
 ### Inputs and Secrets
 
+You can passed values to a reusable workflow via `inputs` & `secrets` keywords.
+
+e.g.
+
+- A reusable workflow:
+
+  - takes: 2 inputs and a secret
+
+    ```yml
+    # .github/workflows/create-repo-issue.yml
+    name: create-repo-issue
+
+    on:
+      workflow_call:
+        secrets:
+          token:
+            required: true
+        inputs:
+          title:
+            description: "Issue title"
+            required: true
+            type: string
+          body:
+            description: "Issue body"
+            required: true
+            type: string
+    ```
+
+  - these inputs, secrets are accessed via `inputs`, `secrets` context
+
+    ```
+    jobs:
+      create_issue:
+        runs-on: ubuntu-latest
+
+        permissions:
+          issues: write
+        steps:
+          - name: Create issue using REST API
+            run: |
+              curl --request POST \
+              --url https://api.github.com/repos/${{ github.repository }}/issues \
+              --header 'authorization: Bearer ${{ secrets.token }}' \
+              --header 'content-type: application/json' \
+              --data '{
+                "title": "${{ inputs.title }}",
+                "body": "${{ inputs.body }}"
+                }' \
+              --fail
+    ```
+
+- Caller workflow
+
+  - calls the reusable workflow
+  - passes inputs via `with`, secret via `secrets`
+
+  ```yml
+  # .github/workflows/create-demo-issue
+  name: Create demo issue
+
+  on:
+    push:
+
+  jobs:
+    msg:
+      runs-on: ubuntu-latest
+      steps:
+        - run: echo "Simple demo for reusable workflow"
+
+    info:
+      uses: ./.github/workflows/create-repo-issue.yml@main
+      secrets:
+        token: ${{ secrets.PAT }}
+      with:
+        title: "Test issue"
+        body: "Test body"
+  ```
+
+> [!NOTE]
+> You can use the `jobs.<job_id>.secrets.inherit`[^jobs-job_id-secrets-inherit] keyword to pass all the calling workflow's secrets to the called workflow.
+>
+> This includes all secrets the calling workflow has access to: organization/repository/environment secrets.
+
+> [!NOTE]
+> If in the calling workflow, the secrets are inherited by using `secrets: inherit`,
+>
+> then in the reusable workflow, you can reference them even if they are not explicitly defined in the `on` key.
+
+> [!IMPORTANT]
+> TODO list all the entity has inputs
+
 ### Outputs
+
+You can return values from a reusable workflow via its `outputs`:
+
+- In a step, you assign the return value to an environment variable and direct to environment file via `$GITHUB_OUTPUT`.
+- In the job, you capture the value from the step to the job `outputs` section (or map step outputs to job outputs)
+- In the reusable workflow, you return values via its `outputs` section using the value form the job (or map job outputs to workflow outputs)
+
+e.g.
+
+- Reusable workflow (has outputs `issue-number`)
+
+  ```yaml
+  # .github/workflows/create-repo-issue-v2
+  name: create-repo-issue-v2
+
+  on:
+    workflow_call:
+      inputs:
+        title:
+          description: "Issue title"
+          required: true
+          type: string
+        body:
+          description: "Issue body"
+          required: true
+          type: string
+      outputs:
+        issue-number:
+          description: "The issue number"
+          value: ${{ jobs.create-issue.outputs.issue-num }}
+
+  jobs:
+    create-issue:
+      runs-on: ubuntu-latest
+      # Map step outputs to job outputs
+      outputs:
+        issue-num: ${{ steps.new-issue.outputs.issue-num }}
+
+      permissions:
+        issues: write
+      steps:
+        - name: Create issue using REST API
+          id: new-issue
+          run: |
+            response=$(curl --request POST \
+            --url https://api.github.com/repos/${{ github.repository }}/issues \
+            --header 'authorization: Bearer ${{ secrets.PAT }}' \
+            --header 'content-type: application/json' \
+            --data '{
+              "title": "${{ inputs.title }}",
+              "body": "${{ inputs.body }}"
+              }' \
+            --fail | jq '.number')
+            echo "issue-num=$response" >> $GITHUB_OUTPUT
+  ```
+
+- Caller workflow
+
+  ```yaml
+  # .github/workflows/create-demo-issue-v2
+  name: Create demo issue v2
+
+  on:
+    push:
+
+  jobs:
+    create-new-issue:
+      uses: ./.github/workflows/create-repo-issue-v2.yml
+      secrets: inherit
+      with:
+        title: "Test issue"
+        body: "Test body"
+
+    report-issue-number:
+      runs-on: ubuntu-latest
+      needs: create-new-issue
+      steps:
+        - run: echo ${{ needs.create-new-issue.outputs.issue-number }}
+  ```
+
+> [!IMPORTANT]
+> TODO list all the entity has outputs
 
 ### Limitations
 
+- You can only nest 4 level of reusable workflows.
+- A caller workflow can call a maximum of 20 reusable workflow.
+- Environment variables set in an `env` context in the caller workflow are not propagated (to the called workflow).
+- You can’t reference a reusable workflow that’s in a separate private repository.
+
+For more information, see [Limitations | Reusing workflows][Limitations]
+
+> [!IMPORTANT]
+> Reusable workflows vs Composition actions
+>
+> |                   | Reusable workflow                                 | Composition action                         |
+> | ----------------- | ------------------------------------------------- | ------------------------------------------ |
+> | Nested calls      | Up to 4                                           | Up to 10                                   |
+> | Pass secrets      | Directly                                          | As inputs                                  |
+> | If conditionals   | Support                                           | Not support                                |
+> | Code organization | A simple YAML file, in the same repository or not | Required its own repository                |
+> | Functionality     | Can have multiple jobs                            | Can only have steps that equate to one job |
+> | Runner            | Able to specify                                   | Use runner of workflow                     |
+
 ## Required Workflows
 
-### Constraints
+required workflows
+: workflows that _must run_ for a given set of repositories
+: provides a way to _enforce_ **standards** across a GitHub organization
 
-### Example
+e.g. a workflow execution must be passed for a pull request to be processed
 
-### Execution
+> [!CAUTION]
+> GitHub no longer supports required workflows[^introducing-required-workflows][^required-workflows] for GitHub Actions, it's now a part of Repository Rules, aka Rulesets[^required-workflows-will-move-to-repository-rules][^github-repository-rules]
+>
+> - To require workflows to pass before merging, use repository _rulesets_ instead.
+>   For more information, see [Ruleset | Chap 9](chap-09.md#protecting-repository-with-rulesets)
 
 ## Conclusion
 
 [organization]: https://docs.github.com/en/organizations/collaborating-with-groups-in-organizations/about-organizations
 [GitHub Enterprise Cloud]: https://docs.github.com/en/get-started/onboarding/getting-started-with-github-enterprise-cloud
 [community health file]: https://docs.github.com/en/communities/setting-up-your-project-for-healthy-contributions/creating-a-default-community-health-file
+[Sharing actions and workflows with your organization]: https://docs.github.com/en/actions/creating-actions/sharing-actions-and-workflows-with-your-organization
+[Limitations]: https://docs.github.com/en/actions/using-workflows/reusing-workflows#limitations
 
 [^sharing-workflows]: <https://docs.github.com/en/actions/using-workflows/sharing-workflows-secrets-and-runners-with-your-organization#sharing-workflows>
 [^creating-starter-workflows]: <https://docs.github.com/en/actions/using-workflows/creating-starter-workflows-for-your-organization>
 [^github-pricing]: <https://github.com/pricing>
 [^jobs-job_id-uses]: <https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_iduses>
-
-```
-
-```
-
-[Sharing actions and workflows with your organization]: https://docs.github.com/en/actions/creating-actions/sharing-actions-and-workflows-with-your-organization
+[^jobs-job_id-secrets-inherit]: <https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idsecretsinherit>
+[^required-workflows]: <https://docs.github.com/en/actions/using-workflows/required-workflows>
+[^introducing-required-workflows]: <https://github.blog/2023-01-10-introducing-required-workflows-and-configuration-variables-to-github-actions/>
+[^required-workflows-will-move-to-repository-rules]: <https://github.blog/changelog/2023-08-02-github-actions-required-workflows-will-move-to-repository-rules/>
+[^github-repository-rules]: <https://github.blog/2023-10-11-enforcing-code-reliability-by-requiring-workflows-with-github-repository-rules/>

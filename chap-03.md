@@ -33,9 +33,12 @@ To be used as an action, a GitHub repository must contain an actions file (`.act
 `.action.yml` file contains metadata[^action-metadata] about the action itself, which has 4 main parts:
 
 - Basic info: `name`, `description`, `author`
+
 - `inputs`: Input parameters allow you to specify data that the action expects to use during runtime
+
   - If a parameter is required, your workflow needs to use a `with` statement, when calling the action, to provide a value to pass in for that parameter.
   - GitHub stores input parameters as environment variables.
+
 - `outputs`: Declare data that an action sets [^outputs-docker-container-javascript-action] [^outputs-for-composite-actions].
 
   > [!NOTE]
