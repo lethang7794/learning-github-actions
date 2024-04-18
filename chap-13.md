@@ -110,7 +110,7 @@ You can directly invoke GitHub REST APIs and do a lot of things by
 
 e.g.
 
-- As in the example for [Outputs | Chap 12](chap-12.md#outputs)
+- Create a issue from workflow inputs, as in the example for [Outputs | Chap 12](chap-12.md#outputs)
 
   ```yaml
   # .github/workflows/create-repo-issue-v2
@@ -137,6 +137,30 @@ e.g.
             --fail | jq '.number')
             echo "issue-num=$response" >> $GITHUB_OUTPUT
   ```
+
+- Create an issue on failure
+
+```yaml
+jobs:
+  create-issue-on-failure:
+    runs-on: ubuntu-latest
+    needs: test-run
+    if: always() && failure()
+    steps:
+      - name: invoke workflow to create issue
+        run: >
+          curl -X POST
+            -H "authorization: Bearer ${{ secrets.PIPELINE_USE }}"
+            -H "Accept: application/vnd.github.v3+json"
+            "https://api.github.com/repos/${{ github.repository }}/actions/workflows/create-failure-issue.yml/dispatches"
+            -d '{
+                  "ref": "main",
+                  "inputs": {
+                    "title": "Automated workflow failure issue for commit ${{ github.sha }}",
+                    "body": "This issue was automatically created by the GitHub Action workflow ** ${{ github.workflow }} **"
+                  }
+                }'
+```
 
 ## Using a Matrix Strategy to Automatically Create Jobs
 
