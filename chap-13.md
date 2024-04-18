@@ -26,12 +26,8 @@ If you execute your workflows on a GitHub-hosted runner, the GitHub CLI is alrea
     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   ```
 
-e.g.
-
 <details>
-<summary>
-A workflow create issue via GitHub CLI
-</summary>
+<summary><b>Example: A workflow create issue via GitHub CLI</b></summary>
 
 ```yaml
 # .github/workflows/create-issue-via-gh.yml
@@ -91,11 +87,9 @@ With `github-script` action, you can write a script (in JavaScript) in your work
 
 To use the `github-script` action, you provide the `script` input with the body of the _script_ you want to write.
 
-e.g.
-
 <details>
 <summary>
-A github script that add labels to issue
+<b>Example: A github script that add labels to issue</b>
 </summary>
 
 ```yaml
@@ -120,13 +114,8 @@ You can directly invoke GitHub REST APIs and do a lot of things by
 - using a CLI HTTP client
 - with the `GITHUB_TOKEN` from workflow run's context `secrets`/`github`
 
-e.g.
-
 <details>
-<summary>
-Create a issue from workflow inputs,
-</summary>
-As in the example for [Outputs | Chap 12](chap-12.md#outputs)
+<summary><b>Example: Create a issue from workflow inputs (As in the example for <a href="./chap-12.md#outputs">Outputs | Chap 12</a>)</b></summary>
 
 ```yaml
 # .github/workflows/create-repo-issue-v2
@@ -155,11 +144,8 @@ jobs:
 ```
 
 </details>
-
 <details>
-<summary>
-Create an issue on failure
-</summary>
+<summary><b>Example: Create an issue on failure</b></summary>
 
 ```yaml
 jobs:
