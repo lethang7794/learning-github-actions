@@ -26,11 +26,9 @@ If you execute your workflows on a GitHub-hosted runner, the GitHub CLI is alrea
     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   ```
 
-e.g.
-
 <details>
 <summary>
-A workflow create issue via GitHub CLI
+<h4>Example: A workflow create issue via GitHub CLI</h4>
 </summary>
 
 ```yaml
@@ -91,11 +89,10 @@ With `github-script` action, you can write a script (in JavaScript) in your work
 
 To use the `github-script` action, you provide the `script` input with the body of the _script_ you want to write.
 
-e.g.
-
 <details>
 <summary>
-A github script that add labels to issue
+<h4>Example: A github script that add labels to issue</h4><br>
+#### Example: A github script that add labels to issue
 </summary>
 
 ```yaml
@@ -124,9 +121,8 @@ e.g.
 
 <details>
 <summary>
-Create a issue from workflow inputs,
+Create a issue from workflow inputs (As in the example for <a href="./chap-12.md#outputs">Outputs | Chap 12</a>)
 </summary>
-As in the example for [Outputs | Chap 12](chap-12.md#outputs)
 
 ```yaml
 # .github/workflows/create-repo-issue-v2
