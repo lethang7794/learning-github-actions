@@ -28,50 +28,55 @@ If you execute your workflows on a GitHub-hosted runner, the GitHub CLI is alrea
 
 e.g.
 
-- A workflow create issue via GitHub CLI
+<details>
+<summary>
+A workflow create issue via GitHub CLI
+</summary>
 
-  ```yaml
-  # .github/workflows/create-issue-via-gh.yml
-  name: create issue via gh
+```yaml
+# .github/workflows/create-issue-via-gh.yml
+name: create issue via gh
 
-  on:
-    workflow_call:
-      inputs:
-        title:
-          description: "Issue title"
-          required: true
-          type: string
-        body:
-          description: "Issue body"
-          required: true
-          type: string
-      outputs:
-        issue-number:
-          description: "The issue number"
-          value: ${{ jobs.create-issue.outputs.issue-num }}
+on:
+  workflow_call:
+    inputs:
+      title:
+        description: "Issue title"
+        required: true
+        type: string
+      body:
+        description: "Issue body"
+        required: true
+        type: string
+    outputs:
+      issue-number:
+        description: "The issue number"
+        value: ${{ jobs.create-issue.outputs.issue-num }}
 
-  jobs:
-    create-issue:
-      runs-on: ubuntu-latest
-      # Map job outputs to step outputs
-      outputs:
-        issue-num: ${{ steps.new-issue.outputs.issue-num }}
+jobs:
+  create-issue:
+    runs-on: ubuntu-latest
+    # Map job outputs to step outputs
+    outputs:
+      issue-num: ${{ steps.new-issue.outputs.issue-num }}
 
-      permissions:
-        issues: write
+    permissions:
+      issues: write
 
-      steps:
-        - name: Create issue using CLI
-          id: new-issue
-          run: |
-            response=`gh issue create \
-            --title "${{ inputs.title }}" \
-            --body "${{ inputs.body }}" \
-            --repo ${{ github.event.repository.url }}`
-            echo "issue-num=$response | rev | cut -d'/' -f 1" >> $GITHUB_OUTPUT
-          env:
-            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  ```
+    steps:
+      - name: Create issue using CLI
+        id: new-issue
+        run: |
+          response=`gh issue create \
+          --title "${{ inputs.title }}" \
+          --body "${{ inputs.body }}" \
+          --repo ${{ github.event.repository.url }}`
+          echo "issue-num=$response | rev | cut -d'/' -f 1" >> $GITHUB_OUTPUT
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+```
+
+</details>
 
 ### Using `github-script` action (Write script in JavaScript)
 
@@ -88,6 +93,11 @@ To use the `github-script` action, you provide the `script` input with the body 
 
 e.g.
 
+<details>
+<summary>
+A github script that add labels to issue
+</summary>
+
 ```yaml
 steps:
   - uses: actions/github-script@v6
@@ -101,6 +111,8 @@ steps:
       })
 ```
 
+</details>
+
 ### Invoking `GitHub REST APIs` (Write shell script)
 
 You can directly invoke GitHub REST APIs and do a lot of things by
@@ -110,35 +122,44 @@ You can directly invoke GitHub REST APIs and do a lot of things by
 
 e.g.
 
-- Create a issue from workflow inputs, as in the example for [Outputs | Chap 12](chap-12.md#outputs)
+<details>
+<summary>
+Create a issue from workflow inputs,
+</summary>
+As in the example for [Outputs | Chap 12](chap-12.md#outputs)
 
-  ```yaml
-  # .github/workflows/create-repo-issue-v2
-  name: create-repo-issue-v2
+```yaml
+# .github/workflows/create-repo-issue-v2
+name: create-repo-issue-v2
 
-  on:
-  # ...
+on:
+# ...
 
-  jobs:
-    create-issue:
-      runs-on: ubuntu-latest
-      # ...
-      steps:
-        - name: Create issue using REST API
-          run: |
-            response=$(curl --request POST \                                       # Use curl to invoke a HTTP request
-            --url https://api.github.com/repos/${{ github.repository }}/issues \
-            --header 'authorization: Bearer ${{ secrets.PAT }}' \                  # ... provide the token
-            --header 'content-type: application/json' \
-            --data '{
-              "title": "${{ inputs.title }}",                                      # ... and the inputs
-              "body": "${{ inputs.body }}"
-              }' \
-            --fail | jq '.number')
-            echo "issue-num=$response" >> $GITHUB_OUTPUT
-  ```
+jobs:
+  create-issue:
+    runs-on: ubuntu-latest
+    # ...
+    steps:
+      - name: Create issue using REST API
+        run: |
+          response=$(curl --request POST \                                       # Use curl to invoke a HTTP request
+          --url https://api.github.com/repos/${{ github.repository }}/issues \
+          --header 'authorization: Bearer ${{ secrets.PAT }}' \                  # ... provide the token
+          --header 'content-type: application/json' \
+          --data '{
+            "title": "${{ inputs.title }}",                                      # ... and the inputs
+            "body": "${{ inputs.body }}"
+            }' \
+          --fail | jq '.number')
+          echo "issue-num=$response" >> $GITHUB_OUTPUT
+```
 
-- Create an issue on failure
+</details>
+
+<details>
+<summary>
+Create an issue on failure
+</summary>
 
 ```yaml
 jobs:
@@ -161,6 +182,8 @@ jobs:
                   }
                 }'
 ```
+
+</details>
 
 ## Using a Matrix Strategy to Automatically Create Jobs
 
