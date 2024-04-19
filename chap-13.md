@@ -338,7 +338,7 @@ For each object in the include list:
 - If the object cannot be added to any of the matrix combinations, a new matrix combination will be created instead.
 - Note that the original matrix values will not be overwritten, but added matrix values can be overwritten.
 
-Example 1: Expanding configuration
+#### Example 1: Expanding configuration
 
 - The matrix
 
@@ -381,7 +381,7 @@ Example 1: Expanding configuration
 
   </details>
 
-Example 2: Add configuration
+#### Example 2: Add configuration
 
 - The matrix
 
@@ -430,7 +430,7 @@ To remove specific configurations defined in the matrix, use [`jobs.<job_id>.str
 
 An excluded configuration only has to be a partial match for it to be excluded.
 
-Example: Exclude configurations
+#### Example: Exclude configurations
 
 - The matrix
 
@@ -487,7 +487,106 @@ Example: Exclude configurations
 
 ### Handling Failure Cases
 
-### Defining Max Concurrent Jobs
+#### How workflow run, job, steps are executed?
+
+- A workflow run is made up of one or more jobs, which run in _parallel_ by default.[^jobs]
+
+  <details>
+  <summary></summary>
+
+  To run jobs _sequentially_, you can define dependencies on other jobs using the [`jobs.<job_id>.needs`] keyword
+
+  </details>
+
+  - A job contains a _sequence_ of tasks called steps.[^jobsjob_idsteps]
+
+#### How workflow status are determined?
+
+By default:
+
+- A workflow run _fails_ if there were any job failed.
+
+  <details>
+  <summary></summary>
+
+  By default, `jobs.<job_id>.continue-on-error` is `false`
+
+  </details>
+
+  <details>
+  <summary></summary>
+
+  Set `jobs.<job_id>.continue-on-error` to `true` to allow a workflow run to _pass_ when this job fails
+
+  </details>
+
+  - A job _fails_ if there were any step failed.
+
+    <details>
+    <summary></summary>
+
+    By default, `jobs.<job_id>.steps[*].continue-on-error` is `false`
+    </details>
+
+    <details>
+    <summary></summary>
+
+    Set `jobs.<job_id>.steps[*].continue-on-error` to `true` to allow a job to _pass_ when this step fails
+    </details>
+
+#### How jobs, steps are executed when there is failure?
+
+By default:
+
+- If a job fails,
+
+  - all sequential jobs that need it are skipped[^defining-prerequisite-jobs]...
+    <details>
+    <summary>...</summary>
+    unless the jobs use a conditional expression that causes the job to continue.
+    </details>
+
+  - (other parallel jobs continue to run)
+
+  - the workflow run _fails_
+
+- If a step fails, all sequential steps are skipped.
+
+  - all sequential steps are skipped[^action-fail] ...
+    <details>
+    <summary>...</summary>
+    unless the steps use a conditional expression that causes the step to continue.
+    </details>
+
+  - the job _fails_
+
+#### Handling failure in matrix
+
+You can control how a job failure is handled with
+
+- `jobs.<job_id>.continue-on-error`: applied to a single job
+
+  <details>
+  <summary></summary>
+
+  If `jobs.<job_id>.continue-on-error` is evaluated to `true`, other jobs in the matrix will continue running even if the job with `jobs.<job_id>.continue-on-error: true` fails.
+  </details>
+
+- `jobs.<job_id>.strategy.fail-fast`: applies to the entire matrix
+
+  <details>
+  <summary></summary>
+
+  If `jobs.<job_id>.strategy.fail-fast` is evaluated to `true`, GitHub will cancel all in-progress & queued jobs in the matrix if any job in the matrix fails.
+
+  This property defaults to `true`.
+  </details>
+
+### Limiting Max Concurrent Jobs
+
+By default, GitHub will maximize the number of jobs run in parallel depending on runner availability.
+
+To set the maximum number of jobs that can run simultaneously when using a matrix job strategy, use `jobs.<job_id>.strategy.max-parallel`.
 
 ## Using Containers in Your Workflow
 
@@ -520,3 +619,11 @@ Example: Exclude configurations
 [`repository_dispatch` event]: https://docs.github.com/en/webhooks/webhook-events-and-payloads#repository_dispatch
 [`jobs.<job_id>.strategy.matrix.include`]: https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idstrategymatrixinclude
 [`jobs.<job_id>.strategy.matrix.exclude`]: https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idstrategymatrixexclude
+
+[^jobs]: <https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobs>
+
+[`jobs.<job_id>.needs`]: https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idneeds
+
+[^jobsjob_idsteps]: <https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idsteps>
+[^defining-prerequisite-jobs]: <https://docs.github.com/en/actions/using-jobs/using-jobs-in-a-workflow#defining-prerequisite-jobs>
+[^action-fail]: <https://docs.github.com/en/actions/creating-actions/setting-exit-codes-for-actions>
