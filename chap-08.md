@@ -324,12 +324,12 @@ e.g.
 
 In additional to functions such as `startsWith`, `hashFiles` in [Workflow Functions](#workflow-functions), GitHub Actions also has a set of [status check functions][status-check-functions]
 
-| Function                  | Purpose                                                                     | Notes                                                 |
-| ------------------------- | --------------------------------------------------------------------------- | ----------------------------------------------------- |
-| `success()`[^success]     | Returns `true` when **_all_ previous steps** have succeeded.                |                                                       |
-| `always()`[^always]       | Causes the step to always execute, and returns `true`, even when cancelled. | `always` can cause the workflow to hang until timeout |
-| `cancelled()`[^cancelled] | Returns `true` if the **workflow** was cancelled.                           |                                                       |
-| `failure()`[^failure]     | Returns `true` when **_any_ previous step** of a job fails.                 |                                                       |
+| Function                  | Purpose                                                                       | Notes                                                       |
+| ------------------------- | ----------------------------------------------------------------------------- | ----------------------------------------------------------- |
+| `success()`[^success]     | Returns `true` when **_all_ previous steps** have succeeded.                  |                                                             |
+| `always()`[^always]       | Causes the step to _always execute_, and returns `true`, even when cancelled. | `always()` can cause the workflow to hang until timeout     |
+| `cancelled()`[^cancelled] | Returns `true` if the **workflow** was cancelled.                             | `!cancelled()` is the recommended alternative to `always()` |
+| `failure()`[^failure]     | Returns `true` when **_any_ previous step** of a job fails.                   |                                                             |
 
 When using both `if` conditional and `status check functions`, you can control the execution of a job/step based on the status of previous steps, workflow.
 
