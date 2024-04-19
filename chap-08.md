@@ -236,38 +236,36 @@ A matrix strategy lets you
 - use variables in a single job definition
 - to automatically create multiple job runs (that are based on the combinations of the variables)
 
-e.g.
+### Example: A single-dimension matrix (matrix with one variable)
 
-- a single-dimension matrix (matrix with one variable)
+```yml
+jobs:
+  example_matrix:
+    strategy:
+      matrix:
+        version: [10, 12, 14]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.version }}
+```
 
-  ```yml
-  jobs:
-    example_matrix:
-      strategy:
-        matrix:
-          version: [10, 12, 14]
-      runs-on: ubuntu-latest
-      steps:
-        - uses: actions/setup-node@v4
-          with:
-            node-version: ${{ matrix.version }}
-  ```
+### Example: A multi-dimension matrix (matrix with multiple variables)
 
-- a multi-dimension matrix (matrix with multiple variables)
-
-  ```yml
-  jobs:
-    example_matrix:
-      strategy:
-        matrix:
-          os: [ubuntu-22.04, ubuntu-20.04]
-          version: [10, 12, 14]
-      runs-on: ${{ matrix.os }}
-      steps:
-        - uses: actions/setup-node@v4
-          with:
-            node-version: ${{ matrix.version }}
-  ```
+```yml
+jobs:
+  example_matrix:
+    strategy:
+      matrix:
+        os: [ubuntu-22.04, ubuntu-20.04]
+        version: [10, 12, 14]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.version }}
+```
 
 > [!TIP]
 > With matrix strategy, you can create:
