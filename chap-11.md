@@ -458,10 +458,11 @@ e.g. A Docker container action to count the number of arguments passed in
   2. Provide the pre-build image
 
      ```yml
-     using: "docker"
-     image: "docker://quay.io/techupskills2/arg-count-action:1.0.1"
-     args:
-       - ${{ inputs.arguments-to-count }}
+     runs:
+       using: "docker"
+       image: "docker://quay.io/techupskills2/arg-count-action:1.0.1"
+       args:
+         - ${{ inputs.arguments-to-count }}
      ```
 
 ## Completing Your Action Creation
