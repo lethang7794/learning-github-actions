@@ -709,9 +709,7 @@ steps:
 
 You can use _service containers_ to connect databases, web services, memory caches, and other tools to your workflow[^about-service-containers].
 
-e.g.
-
-- A job run integration tests that require access to a database and memory cache.
+For example, a job run integration tests that require access to a database and memory cache.
 
 For more information, see GitHub Actions docs:
 
