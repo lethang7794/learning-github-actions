@@ -8,7 +8,17 @@ GitHub-Hosted Runners are the easiest way to execute jobs of a workflow.
 
 The only configuration needed for a Github-Hosted Runners is the `runs-on` declaration (with the correct label[^github-hosted-runner]) in each job. e.g. `runs-on: ubuntu-latest`
 
-- When executed, each job runs in a fresh instance of a runner image specified by `runs-on`.
+- When executed, each job runs in a "fresh instance" of a runner image specified by `runs-on`[^github-hosted-runner].
+
+  <details>
+  <summary></summary>
+  In <a href="https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners/about-github-hosted-runners#using-a-github-hosted-runner">Using a GitHub-hosted runner</a>:
+
+  - When the job begins, GitHub automatically provisions a new VM for that job.
+  - All steps in the job execute on the VM, allowing the steps in that job to share information using the runner's filesystem.
+
+  </details>
+
 - GitHub takes care of upgrade & maintenance for the VMs.
 
 ### What's in the Runner Images?
@@ -26,29 +36,29 @@ e.g.
 
 - Linux
 
-    ```yml
-    jobs:
-      update-env:
-        runs-on: ubuntu-latest
-        steps:
-          - name: Install Package
-            run: |
-              sudo apt-get update
-              sudo apt-get install <package-name>
-    ```
+  ```yml
+  jobs:
+    update-env:
+      runs-on: ubuntu-latest
+      steps:
+        - name: Install Package
+          run: |
+            sudo apt-get update
+            sudo apt-get install <package-name>
+  ```
 
 - MacOS
 
-    ```yml
-    jobs:
-      update-env:
-        runs-on: macos-latest
-        steps:
-          - name: Install Package
-            run: |
-              brew update
-              brew install <package-name>
-    ```
+  ```yml
+  jobs:
+    update-env:
+      runs-on: macos-latest
+      steps:
+        - name: Install Package
+          run: |
+            brew update
+            brew install <package-name>
+  ```
 
 ## Self-Hosted Runners
 
@@ -160,7 +170,7 @@ To autoscaling self-hosted runners, you should you ephemeral, just-in-time runne
 [^actions-runner-controller]: <https://docs.github.com/en/actions/hosting-your-own-runners/managing-self-hosted-runners-with-actions-runner-controller/quickstart-for-actions-runner-controller>
 
 [runners]: ./chap-02.md#runners
-[usage-limits]: <https://docs.github.com/en/actions/hosting-your-own-runners/managing-self-hosted-runners/about-self-hosted-runners#usage-limits>
-[troubleshoot-self-hosted-runners]: <https://docs.github.com/en/actions/hosting-your-own-runners/managing-self-hosted-runners/monitoring-and-troubleshooting-self-hosted-runners>
-[actions-runner-images]: <https://github.com/actions/runner-images>
-[terraform-aws-github-runner]: <https://github.com/philips-labs/terraform-aws-github-runner>
+[usage-limits]: https://docs.github.com/en/actions/hosting-your-own-runners/managing-self-hosted-runners/about-self-hosted-runners#usage-limits
+[troubleshoot-self-hosted-runners]: https://docs.github.com/en/actions/hosting-your-own-runners/managing-self-hosted-runners/monitoring-and-troubleshooting-self-hosted-runners
+[actions-runner-images]: https://github.com/actions/runner-images
+[terraform-aws-github-runner]: https://github.com/philips-labs/terraform-aws-github-runner
