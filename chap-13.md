@@ -590,11 +590,133 @@ To set the maximum number of jobs that can run simultaneously when using a matri
 
 ## Using Containers in Your Workflow
 
-### Using a Container as the Environment for a Job
+On a GitHub-hosted runner,
 
-### Using a Container with a Step
+- each job runs in a fresh instance (a VM) of a runner image specified by `runs-on`.
+- all steps in the job execute on the same VM.
 
-### Running Containers as Services in a Job
+To have more control about the environment, you can use container as the environments in your workflow.
+
+- You can execute `docker run` in a step yourself (to create & run a container from an image)
+
+  <details>
+  <summary></summary>
+
+  ```yml
+  jobs:
+    my-docker-job:
+      runs-on: ubuntu-latest
+      steps:
+        run: sudo docker run --rm -v "$PWD":/workdir -w /workdir centos:latest ls -laR
+  ```
+
+  </details>
+
+- You can use an action, e.g. `docker-run-action`[^docker-run-action].
+
+- or use 3 built-in ways (in GitHub Actions) to leverage a container in your workflow:
+
+  - as the environment for a job
+  - as the environment for a step
+  - to provide services for a job
+
+> [!IMPORTANT]
+> To use container in your workflow, the workflow must run in a Linux runner.
+
+### Using a Container (as the environment) for a Job
+
+Use `jobs.<job_id>.container` to create a container to run any steps (in that job) that don't already specify a container.
+
+- If you have steps that use container actions, the container actions will run as sibling containers on the same network with the same volume mounts.
+
+> [!NOTE]
+> The default shell for run steps inside a container is `sh` (instead of `bash`).
+>
+> This can be overridden with
+>
+> - `jobs.<job_id>.defaults.run` or
+> - `jobs.<job_id>.steps[*].shell`
+
+e.g.
+
+```yml
+jobs:
+  job-in-container:
+    runs-on: ubuntu-latest
+    container:
+      image: golang:1.11.1-alpine
+    steps:
+      - run: "go version" # go1.11.1 linux/amd64
+```
+
+```yml
+jobs:
+  job-in-node-container:
+    runs-on: ubuntu-22.04
+    container:
+      image: node:20.12.2-alpine
+      env:
+        NODE_ENV: production
+      ports:
+        - 80
+      volumes:
+        - source_data:/workdir
+      options: --cpus 2
+    steps:
+      - run: "node -v" # v20.12.2
+```
+
+> [!NOTE]
+> When you only specify a container image, you can omit the `image` keyword.
+>
+> ```yml
+> jobs:
+>   job-in-container:
+>     runs-on: ubuntu-latest
+>     container: golang:1.11.1-alpine
+> ```
+
+### Using a container as the environment for a Step
+
+To use a container as the environment for a step, you
+
+- use `jobs.<job_id>.steps[*].uses` and provide the path of published Docker container image
+- `with` the options:
+
+  - `jobs.<job_id>.steps[*].with.entrypoint`: Overrides the Docker `ENTRYPOINT` in the Dockerfile
+
+  - `jobs.<job_id>.steps[*].with.args`: A _single_ string that defines the "inputs" for a Docker container.
+    - GitHub passes the `args` to the container's `ENTRYPOINT` when the container starts up
+    - The `args` are used in place of the `CMD` instruction in a Dockerfile.
+
+e.g.
+
+```yaml
+steps:
+  - name: a step that is a container
+    uses: docker://ghcr.io/lethang7794/hello-world-docker-action:main
+    with:
+      # entrypoint: another-entrypoint.sh
+      args: Bobs
+```
+
+> [!IMPORTANT]
+> How is it compared to a docker container action?
+>
+> It's an docker container action with without any documentation?
+
+### Using containers to provide services for a Job
+
+You can use _service containers_ to connect databases, web services, memory caches, and other tools to your workflow[^about-service-containers].
+
+e.g.
+
+- A job run integration tests that require access to a database and memory cache.
+
+For more information, see GitHub Actions docs:
+
+- [Creating PostgreSQL service containers]
+- [Creating Redis service containers]
 
 ## Conclusion
 
@@ -606,11 +728,11 @@ To set the maximum number of jobs that can run simultaneously when using a matri
 
 - To automatically _generate **jobs**_, you can use **matrix strategy**.
 
-- To have more _control_ about the **environment**/tooling of your workflow, you can use **container**:
+- To have more _control_ about the **environment**/tooling of your workflow, you can use **a container**:
 
   - as the environment for a step
   - as the environment for a job
-  - to provide services for a job
+  - (as a _service container_) to provide service for a job
 
 [github-script]: https://github.com/marketplace/actions/github-script
 [github-cli]: https://github.com/cli/cli
@@ -627,3 +749,8 @@ To set the maximum number of jobs that can run simultaneously when using a matri
 [^jobsjob_idsteps]: <https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idsteps>
 [^defining-prerequisite-jobs]: <https://docs.github.com/en/actions/using-jobs/using-jobs-in-a-workflow#defining-prerequisite-jobs>
 [^action-fail]: <https://docs.github.com/en/actions/creating-actions/setting-exit-codes-for-actions>
+[^docker-run-action]: <https://github.com/marketplace/actions/docker-run-action>
+[^about-service-containers]: https://docs.github.com/en/actions/using-containerized-services/about-service-containers
+
+[Creating Redis service containers]: https://docs.github.com/en/actions/using-containerized-services/creating-redis-service-containers
+[Creating PostgreSQL service containers]: https://docs.github.com/en/actions/using-containerized-services/creating-postgresql-service-containers
