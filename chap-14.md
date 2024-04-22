@@ -285,15 +285,165 @@ test_pipeline,TeamARunner,tmp/audit/test_pipeline/.github/workflows/test_pipelin
 
 </details>
 
-For more information about planning with `gh actions-importer audit`, see the [Audit | Importer Lab for Jenkins](https://github.com/actions/importer-labs/blob/main/jenkins/2-audit.md)
+For more information about planning with `gh actions-importer audit`, see
+
+- [Perform an audit of Jenkins | GitHub Docs](https://docs.github.com/en/actions/migrating-to-github-actions/automated-migrations/migrating-from-jenkins-with-github-actions-importer#perform-an-audit-of-jenkins)
+- [Audit | Importer Lab for Jenkins](https://github.com/actions/importer-labs/blob/main/jenkins/2-audit.md)
 
 ### Forecasting
 
+`gh actions-importer forecast`
+
+- looks at the _historical_ pipeline utilization (in other platform) with metrics for:
+
+  - completed **job count**<sup>\*\*</sup>
+  - unique **pipeline count**
+  - **execution time**<sup>\*\*</sup>
+  - **queue time**: wait time before a runner execute the job
+  - **concurrent jobs**
+
+  \*\*: Metrics used to estimate the cost of GitHub-hosted runners.
+
+- forecasts _potential_ GitHub Actions build runner usage
+
+> [!TIP]
+> By default, GitHub Actions Importer includes the previous **7 days** in the forecast report.
+
+> [!IMPORTANT]
+> With _job count_ and _execution time_, you can use [GitHub Actions pricing calculator] to estimate the cost of GitHub-hosted runners.
+
+For more information, see [Forecast potential build runner usage | Jenkins migration | GitHub Docs](https://docs.github.com/en/actions/migrating-to-github-actions/automated-migrations/migrating-from-jenkins-with-github-actions-importer#forecast-potential-build-runner-usage)
+
 ### Doing a Dry Run
 
-### Creating Custom Transformers for the Importer
+dry run
+: việc tập bắn không có đạn ([dry run](https://www.informatik.uni-leipzig.de/~duc/TD/td/index.php?word=dry+run) - [The Free Vietnamese Dictionary Project - Hồ Ngọc Đức](http://www.informatik.uni-leipzig.de/~duc/Dict/))
+: an occasion in which you practice a particular activity or performance in preparation for the real event ([dryrun - Cambridge Dictionary](https://dictionary.cambridge.org/dictionary/english/dry-run))
+: (_testing_) a software testing process used to make sure that a system works correctly and will not result in severe failure - [Wikipedia](<https://en.wikipedia.org/wiki/Dry_run_(testing)>)
+
+`--dry-run` mode
+: a mode for
+
+- new user who is playing around with your tool
+- experienced user who is trying to explore some edge case
+- or who is unsure if their environment is right for the tool to do what they expect
+  ([In praise of --dry-run | G-Research](https://www.gresearch.com/news/in-praise-of-dry-run/))
+
+`gh actions-importer dry-run`
+
+- converts a pipeline to a GitHub Actions workflow
+- output its YAML file (without open a pull request)
+
+<details>
+<summary>
+Example
+</summary>
+
+- Run actions-import dry-run
+
+  ```bash
+  gh actions-importer dry-run jenkins --source-url http://localhost:8080/job/test_pipeline --output-dir tmp/dry-run
+  ```
+
+- Each converted job will be created as a result workflow file at `tmp/dry-run/<job-name>/.github/workflows/<job-name>.yml`
+
+  - The importer process may not be able to automatically convert every section/construct of the origin pipeline.
+  - Those _unconvertible_ parts will be **commented out** in the resulting workflow.
+
+    ```yaml
+    jobs:
+      build:
+        runs-on:
+          - self-hosted
+          - TeamARunner
+        steps:
+          - name: checkout
+            uses: actions/checkout@v3.3.0
+          - name: echo message
+            run: echo "Database engine is ${{ env.DB_ENGINE }}"
+          # # This item has no matching transformer
+          # - sleep:
+          #   - key: time
+          #     value:
+          #       isLiteral: true
+          #       value: 80
+    ```
+
+  - You can manually resolve these part or implement a _custom transformer_
+
+</details>
+
+#### Creating Custom Transformers for the Importer
+
+GitHub Actions Importer offers the ability to extend its built-in mapping by creating custom transformers.
+
+A custom transformer:
+
+- converts some part of your pipeline that the importer doesn’t handle automatically.
+- contains mapping logic that GitHub Actions Importer can use to transform your plugins, tasks, runner labels, or environment variables to work with GitHub Actions.
+
+Custom transformers are written with a domain-specific language (DSL) built on top of _Ruby_, and are defined within a file with the `.rb` file extension.
+
+<details>
+<summary>
+Example
+</summary>
+
+- Jenkin's item to sleep that's can be automatically converted
+
+  ```yaml
+  # # This item has no matching transformer
+  # - sleep:
+  #   - key: time
+  #     value:
+  #       isLiteral: true
+  #       value: 80
+  ```
+
+- It can be replace with a simple shell command implemented as a job's step
+
+  ```yml
+  - name: Sleep for 80 seconds
+    run: sleep 80s
+    shell: bash
+  ```
+
+- The custom transformer looks like this
+
+  ```ruby
+  # sleep-transformer.rb
+  transform "sleep" do |item|
+    wait_time = item["arguments"][0]["value"]["value"]
+
+    {
+      "name": "Sleep for #{wait_time} seconds",
+      "run": "sleep #{wait_time}s",
+      "shell": "bash"
+    }
+  ```
+
+- Provide the transformer to the importer
+
+  ```bash
+  gh actions-importer dry-run jenkins \
+    --source-url http://localhost:8080/job/test_pipeline \
+    --output-dir tmp/dry-run --custom-transformers sleep-transformer.rb
+  ```
+
+  </details>
 
 ### Doing the Actual Migration
+
+After completed auditing, done dry-run, the final step is doing the actual migration.
+
+> [!TIP]
+> Don't forget to ensure the target repository has been created/
+
+`gh actions-importer migrate` will do everything the `dry-run` do and open a pull request with the changes.
+
+- You can review the code in the pull request. If there is something you want to change, you can start over with the `migrate` step.
+- If there is any manual steps needed, it will be included in the pull request for you.
+- Once the manual steps and any code reviews of the pull request are completed, the pull request can be merged, and the workflow will have been successfully migrated.
 
 ## Conclusion
 
@@ -314,3 +464,5 @@ For more information about planning with `gh actions-importer audit`, see the [A
   - Custom transformer can be written and pulled in when running the importer.
 
 [^1]: Git is a version control system that intelligently tracks changes in files. [About Git | GitHub Docs](https://docs.github.com/en/get-started/start-your-journey/about-github-and-git#about-git)
+
+[GitHub Actions pricing calculator]: https://github.com/pricing/calculator
