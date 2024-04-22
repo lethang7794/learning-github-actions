@@ -5,14 +5,16 @@ GitHub Actions can be implemented to replace almost any current automation frame
 You can use _GitHub Actions Importer_ to plan, test and **_automate_ migration** to GitHub Actions from the following platforms:
 
 - Azure DevOps
-- Bamboo
-- Bitbucket Pipelines
+- Bamboo<sup>\*</sup>
+- Bitbucket Pipelines<sup>\*</sup>
 - **CircleCI**
 - GitLab
 - **Jenkins**
 - **Travis CI**
 
 and can achieve an **80% conversion** rate for every workflow.
+
+\*: Limited support
 
 ## Prep
 
@@ -104,27 +106,186 @@ You should try to ensure that the migration to GitHub Actions is as smooth & pai
   - Doing a pull request
   - Looking at the automation runs in GitHub Actions
 
-## Azure Pipelines
+## Compare other platform concepts with GitHub Actions
 
-## CircleCI
+The similarities & key differences between GitHub Actions and other platform is available in [Manually Migrating | GitHub Docs](https://docs.github.com/en/actions/migrating-to-github-actions/manually-migrating-to-github-actions) for:
 
-## GitLab CI/CD
+- Azure Pipelines
+- CircleCI
+- GitLab CI/CD
+- Jenkins
+- Travis CI
 
-## Jenkins
-
-## Travis CI
+See this [book](https://learning.oreilly.com/library/view/learning-github-actions/9781098131067/ch14.html#id153) for a more in-depth comparison.
 
 ## GitHub Actions Importer
 
-### Authentication
+Migrate a few pipelines is usually not too difficult. However, what if you have hundreds, thousands pipelines to migrate?
 
-### Planning
+GitHub Actions Importer is a tool that help you import a large number of pipelines from other platforms to GitHub Actions.
 
-### Build Steps and Related
+The recommended way to use GitHub Actions Importer (available via CLI `gh actions-importer`):
 
-### Manual Tasks
+1. `configure`: Configure credentials used to authenticate with your CI server(s)
+2. `audit`: Plan your CI/CD migration by analyzing your current CI/CD footprint
+3. `forecast`: Forecast GitHub Actions usage from historical pipeline utilization
+4. `dry-run`: Convert a pipeline to a GitHub Actions workflow and output its YAML file
+5. `migrate`: Convert a pipeline to a GitHub Actions workflow and open a pull request with the changes
 
-### File Manifest
+### Configure Authentication
+
+The importer tool has to access both platforms:
+
+- The platform you are converting from
+- The target repos in GitHub
+
+For each platform, the importer tool need to know:
+
+- Personal access token
+- Base url of the instance
+- ...
+
+GitHub Actions Importer get these information from environment variables in the `.env.local` file.
+
+You can
+
+- manually configure the environment variables for each platform.
+
+- use the interactive prompt provided by `gh actions-importer configure`
+
+  <details>
+  <summary>Example</summary>
+
+  ```shell
+  gh actions-importer configure
+  ✔ Which CI providers are you configuring?: Jenkins
+  Enter the following values (leave empty to omit):
+  ✔ Personal access token for GitHub: *******************************
+  ✔ Base url of the GitHub instance: https://github.com
+  ✔ Personal access token for Jenkins: *******************************
+  ✔ Username of Jenkins user: admin
+  ✔ Base url of the Jenkins instance: http://localhost:8080/
+  Environment variables successfully updated.
+  ```
+
+  ```shell
+  cat .env.local
+  GITHUB_ACCESS_TOKEN=ghp_P73jshbAcUmCQvaOyAIuxNUE---------
+  GITHUB_INSTANCE_URL=https://github.com
+  JENKINS_ACCESS_TOKEN=117e5929321809d5eeb9a91684--------
+  JENKINS_INSTANCE_URL=http://localhost:8080/
+  JENKINS_USERNAME=admin
+  ```
+
+  </details>
+
+### Planning - Audit summary
+
+`gh actions-importer audit` help:
+
+- Analyzing your current CI/CD footprint
+
+- Plan your CI/CD migration:
+  - Try and run a conversion
+  - Produce an `audit summary`
+
+The `audit summary` contains the following sections:
+
+- Pipelines
+- Build steps
+- Manual tasks
+- Files
+
+#### Pipelines: High level statistics regarding the conversion rate
+
+- Pipelines
+
+  - Total
+    - Successful
+    - Partially successful
+    - Unsupported
+    - Failed
+
+- Job types: The job types used by the original platform
+
+  - Supported
+  - Unsupported: e.g. scripted
+
+#### Build Steps: Overview of the individual build steps that are used across all pipelines
+
+- Total
+  - Known
+  - Unknown
+  - Unsupported
+  - Actions
+
+#### Manual Tasks: Tasks that you will need to manually perform
+
+- Total
+  - Secrets
+  - Self hosted runners
+
+#### Files Manifest: A manifest of all of the files that are written to disk during the audit
+
+Each pipeline will have a variety of files written that include:
+
+- The original pipeline as it was defined in Jenkins.
+- Any network responses used to convert a pipeline.
+- The converted workflow.
+- Stack traces that can used to troubleshoot a failed pipeline conversion
+
+<details>
+<summary>
+Example
+</summary>
+
+```md
+### Successful
+
+#### demo_pipeline
+
+- [demo_pipeline/.github/workflows/demo_pipeline.yml](demo_pipeline/.github/workflows/demo_pipeline.yml)
+- [demo_pipeline/config.json](demo_pipeline/config.json)
+- [demo_pipeline/jenkinsfile](demo_pipeline/jenkinsfile)
+
+### Partially successful
+
+#### monas_dev_work/monas_pipeline
+
+- [monas_dev_work/monas_pipeline/.github/workflows/monas_pipeline.yml](monas_dev_work/monas_pipeline/.github/workflows/monas_pipeline.yml)
+- [monas_dev_work/monas_pipeline/config.json](monas_dev_work/monas_pipeline/config.json)
+- [monas_dev_work/monas_pipeline/jenkinsfile](monas_dev_work/monas_pipeline/jenkinsfile)
+</details>
+
+### Failed
+
+#### groovy_script
+
+- [groovy_script/error.txt](groovy_script/error.txt)
+- [groovy_script/config.json](groovy_script/config.json)
+```
+
+</details>
+
+#### Workflow usage: What are used by each successfully converted pipelines
+
+`workflow_usage.csv` contains a comma-separated list of all actions, secrets, and runners that are used by each successfully converted pipeline.
+
+<details>
+<summary>
+Example
+</summary>
+
+```csv
+Pipeline,Runner,File path
+demo_pipeline,TeamARunner,tmp/audit/demo_pipeline/.github/workflows/demo_pipeline.yml
+test_freestyle_project,DemoRunner,tmp/audit/test_freestyle_project/.github/workflows/test_freestyle_project.yml
+test_pipeline,TeamARunner,tmp/audit/test_pipeline/.github/workflows/test_pipeline.yml
+```
+
+</details>
+
+For more information about planning with `gh actions-importer audit`, see the [Audit | Importer Lab for Jenkins](https://github.com/actions/importer-labs/blob/main/jenkins/2-audit.md)
 
 ### Forecasting
 
